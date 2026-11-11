@@ -107,6 +107,18 @@
     }
   ];
 
+  // 云端照片的本地副本（tools/sync-uploads.mjs 定时生成 uploads.js）。
+  // 有就并到对应那颗星的最前面：这样即使 Supabase 挂了，图也还在站点里。
+  if (window.SITE_UPLOADS) {
+    for (const p of PARTS) {
+      const extra = window.SITE_UPLOADS[p.id];
+      if (!Array.isArray(extra) || !extra.length) continue;
+      const known = new Set((p.photos || []).map((x) => x.src));
+      const fresh = extra.filter((x) => x && x.src && !known.has(x.src));
+      if (fresh.length) p.photos = fresh.concat(p.photos || []);
+    }
+  }
+
   const stage = document.getElementById('stage');
   const cvs = document.getElementById('sky');
   const tip = document.getElementById('skyTip');
