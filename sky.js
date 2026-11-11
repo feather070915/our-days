@@ -690,9 +690,15 @@
     if (SB && part.wall) {
       listUploads(part.wall).then((extra) => {
         if (opened !== i || !extra.length) return;
+        // 本地已经有同一张（定时同步下来的副本）就不再插一遍
+        const have = new Set(
+          [...wall.querySelectorAll('img')].map((im) => (im.getAttribute('src') || '').split('/').pop())
+        );
+        const fresh = extra.filter((ph) => !have.has((ph.src || '').split('/').pop()))
+        if (!fresh.length) return
         wall.querySelectorAll('.ph-empty').forEach((el) => el.remove());
         wall.classList.remove('is-empty');
-        extra.slice().reverse().forEach((ph) => wall.insertBefore(makeFigure(ph), wall.firstChild));
+        fresh.slice().reverse().forEach((ph) => wall.insertBefore(makeFigure(ph), wall.firstChild));
         pnNote.hidden = true;
         panelAdd.classList.remove('is-cta');
       });
