@@ -1,0 +1,557 @@
+/* 星空原型：一颗会呼吸的星 = 一个环节 */
+:root {
+  --night-0: #04060d;
+  --night-1: #070b16;
+  --night-2: #0d1424;
+  --star: #ffe9c4;
+  --star-soft: rgba(255, 233, 196, .55);
+  --paper: #f3ede3;
+  --ink-soft: rgba(243, 237, 227, .62);
+  --serif: "Songti SC", "STSong", "Noto Serif SC", serif;
+  --sans: "DengXian", "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  background: var(--night-0);
+  color: var(--paper);
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ── 天空 ────────────────────────────────── */
+.sky-stage {
+  position: fixed;
+  inset: 0;
+  transform-origin: 50% 50%;
+  will-change: transform;
+}
+#sky {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* ── 左上角的题献 ─────────────────────────── */
+.sky-to {
+  position: fixed;
+  left: max(22px, env(safe-area-inset-left));
+  top: max(20px, env(safe-area-inset-top));
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 14px;
+  letter-spacing: .26em;
+  color: rgba(255, 233, 196, .78);
+  pointer-events: none;
+  transition: opacity .8s ease;
+}
+.sky-to.off { opacity: 0; }
+
+.sky-tip {
+  position: fixed;
+  left: 50%;
+  bottom: max(28px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  margin: 0;
+  font-family: var(--sans);
+  font-size: 12.5px;
+  letter-spacing: .22em;
+  text-indent: .22em;
+  color: rgba(243, 237, 227, .62);
+  max-width: 78vw;
+  text-align: center;
+  line-height: 1.95;
+  pointer-events: none;
+  transition: opacity .6s ease;
+}
+.sky-tip.off { opacity: 0; }
+
+/* ── 星下的小签（hover / 首次提示） ───────── */
+.star-label {
+  position: fixed;
+  transform: translate(-50%, -50%);
+  padding: 6px 12px 7px;
+  border: 1px solid rgba(255, 233, 196, .28);
+  background: rgba(6, 9, 17, .55);
+  backdrop-filter: blur(6px);
+  color: var(--star);
+  font-family: var(--sans);
+  font-size: 12px;
+  letter-spacing: .18em;
+  text-indent: .18em;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .35s ease, transform .35s ease;
+}
+.star-label.on { opacity: 1; }
+.star-label::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -30px;
+  width: 1px;
+  height: 30px;
+  background: linear-gradient(to bottom, rgba(255, 233, 196, 0), rgba(255, 233, 196, .45));
+}
+
+/* ── 可摘的星：真按钮，画面上不写字 ─────────── */
+.star-hit {
+  position: fixed;
+  width: 72px;
+  height: 72px;
+  margin: -36px 0 0 -36px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  border-radius: 50%;
+  cursor: pointer;
+  z-index: 5;
+  transition: transform .3s ease;
+}
+.star-hit:hover { transform: scale(1.12); }
+.star-hit:focus-visible {
+  outline: 1px solid rgba(255, 233, 196, .7);
+  outline-offset: 6px;
+}
+.star-hit.gone { cursor: zoom-in; }
+
+/* 已摘下的星：小计数器（放右上角，左上留给题献） */
+.sky-count {
+  position: fixed;
+  right: max(20px, env(safe-area-inset-right));
+  top: max(22px, env(safe-area-inset-top));
+  margin: 0;
+  font-family: var(--sans);
+  font-size: 11.5px;
+  letter-spacing: .22em;
+  color: rgba(243, 237, 227, .38);
+  pointer-events: none;
+  font-variant-numeric: tabular-nums;
+  transition: opacity .6s ease;
+}
+.sky-count.off { opacity: 0; }
+
+/* ── 闪白（摘星的瞬间） ───────────────────── */
+.flash {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at 50% 45%, #fffaf0, #ffe9c4 45%, rgba(255, 233, 196, 0) 78%);
+  opacity: 0;
+  pointer-events: none;
+}
+.flash.on { animation: flashPop .95s ease-out forwards; }
+@keyframes flashPop {
+  0% { opacity: 0; }
+  28% { opacity: .92; }
+  100% { opacity: 0; }
+}
+
+/* ── 摘下来的那颗星：面板 ─────────────────── */
+.panel {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  overflow-y: auto;
+  padding: clamp(24px, 5vw, 72px) clamp(18px, 6vw, 96px) 72px;
+  background:
+    radial-gradient(80% 50% at 50% 0%, rgba(255, 233, 196, .07), transparent 70%),
+    linear-gradient(180deg, #05070f 0%, #070a13 40%, #05070d 100%);
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity .7s ease, transform .7s cubic-bezier(.22, .61, .36, 1);
+}
+.panel.in { opacity: 1; transform: none; }
+
+.panel-head { max-width: 1180px; margin: 0 auto clamp(26px, 4vw, 52px); position: relative; }
+.panel-kicker {
+  margin: 0 0 14px;
+  font-family: var(--sans);
+  font-size: 11.5px;
+  letter-spacing: .3em;
+  color: rgba(255, 233, 196, .55);
+}
+.panel-title {
+  margin: 0;
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: clamp(38px, 6.4vw, 76px);
+  letter-spacing: .12em;
+  line-height: 1.1;
+  color: #fff6e6;
+  text-shadow: 0 0 42px rgba(255, 220, 170, .28);
+}
+.panel-sub {
+  margin: 16px 0 0;
+  font-family: var(--sans);
+  font-size: clamp(13px, 1.1vw, 15px);
+  letter-spacing: .04em;
+  color: var(--ink-soft);
+}
+.panel-tools {
+  position: absolute;
+  right: 0;
+  top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.panel-close {
+  padding: 9px 16px;
+  border: 1px solid rgba(243, 237, 227, .22);
+  background: transparent;
+  color: rgba(243, 237, 227, .8);
+  font-family: var(--sans);
+  font-size: 12px;
+  letter-spacing: .16em;
+  cursor: pointer;
+  transition: color .3s, border-color .3s;
+}
+.panel-close:hover { color: var(--star); border-color: rgba(255, 233, 196, .5); }
+
+/* 加照片：只有知道口令的人才看得到 */
+.panel-add {
+  padding: 9px 14px;
+  border: 1px solid rgba(255, 233, 196, .34);
+  background: rgba(255, 233, 196, .06);
+  color: var(--star);
+  font-family: var(--sans);
+  font-size: 12px;
+  letter-spacing: .14em;
+  cursor: pointer;
+  transition: background .3s, border-color .3s;
+}
+.panel-add:hover { background: rgba(255, 233, 196, .14); border-color: rgba(255, 233, 196, .6); }
+.panel-add:disabled { opacity: .5; cursor: default; }
+/* 空墙时把它做成主按钮，别让人觉得这页坏了 */
+.panel-add.is-cta {
+  padding: 13px 24px;
+  font-size: 13.5px;
+  border-color: rgba(255, 233, 196, .75);
+  background: rgba(255, 233, 196, .16);
+  color: #fff8ea;
+}
+.panel-add.is-cta:hover { background: rgba(255, 233, 196, .26); }
+.panel-status {
+  max-width: 1180px;
+  margin: 0 auto 18px;
+  font-family: var(--sans);
+  font-size: 12.5px;
+  letter-spacing: .08em;
+  color: var(--star);
+  opacity: .85;
+}
+.panel-file { display: none; }
+.pass {
+  max-width: 1180px;
+  margin: 0 auto 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.pass label {
+  font-family: var(--sans);
+  font-size: 12.5px;
+  letter-spacing: .1em;
+  color: rgba(243, 237, 227, .66);
+}
+.pass input {
+  flex: 1 1 180px;
+  min-width: 0;
+  padding: 9px 12px;
+  background: rgba(255, 233, 196, .05);
+  border: 1px solid rgba(255, 233, 196, .26);
+  color: var(--star);
+  font-family: var(--sans);
+  font-size: 14px;
+  letter-spacing: .12em;
+}
+.pass input:focus-visible { outline: 2px solid rgba(255, 233, 196, .5); outline-offset: 2px; }
+.pass button {
+  padding: 9px 16px;
+  border: 1px solid rgba(255, 233, 196, .34);
+  background: rgba(255, 233, 196, .08);
+  color: var(--star);
+  font-family: var(--sans);
+  font-size: 12px;
+  letter-spacing: .14em;
+  cursor: pointer;
+}
+.wall figure.is-new { position: relative; }
+.wall .tag-new {
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  padding: 3px 8px;
+  background: rgba(4, 6, 13, .66);
+  border: 1px solid rgba(255, 233, 196, .38);
+  color: var(--star);
+  font-family: var(--sans);
+  font-size: 10.5px;
+  letter-spacing: .16em;
+  backdrop-filter: blur(4px);
+  pointer-events: none;
+}
+
+/* 照片墙 */
+.wall {
+  max-width: 1180px;
+  margin: 0 auto;
+  columns: 3;
+  column-gap: clamp(10px, 1.4vw, 20px);
+}
+.wall figure {
+  break-inside: avoid;
+  margin: 0 0 clamp(10px, 1.4vw, 20px);
+  cursor: zoom-in;
+  position: relative;
+}
+.wall img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 76vh;
+  object-fit: cover;
+  object-position: center 28%;
+  background: rgba(255, 255, 255, .04);
+  filter: saturate(.95) contrast(1.03) brightness(.96);
+  transition: transform .6s cubic-bezier(.22, .61, .36, 1), filter .5s ease;
+}
+.wall figure:hover img { transform: scale(1.015); filter: saturate(1.02) contrast(1.05) brightness(1); }
+.wall figcaption {
+  margin-top: 8px;
+  font-family: var(--sans);
+  font-size: 11.5px;
+  letter-spacing: .1em;
+  color: rgba(243, 237, 227, .55);
+}
+
+/* 空墙：四个虚线空相框，点一下就传 */
+.wall.is-empty {
+  columns: unset;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: clamp(10px, 1.4vw, 20px);
+}
+.wall.is-empty .ph-empty {
+  margin: 0;
+  aspect-ratio: 3 / 4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: 1px dashed rgba(255, 233, 196, .28);
+  background: rgba(255, 233, 196, .03);
+  cursor: pointer;
+  transition: border-color .35s, background .35s;
+}
+.wall.is-empty .ph-empty:hover,
+.wall.is-empty .ph-empty:focus-visible {
+  border-color: rgba(255, 233, 196, .6);
+  background: rgba(255, 233, 196, .07);
+  outline: none;
+}
+.ph-plus {
+  font-size: 26px;
+  line-height: 1;
+  color: rgba(255, 233, 196, .5);
+}
+.ph-empty figcaption {
+  margin: 0;
+  font-size: 11px;
+  letter-spacing: .12em;
+  color: rgba(243, 237, 227, .45);
+}
+@media (max-width: 900px) {
+  .wall.is-empty { grid-template-columns: repeat(2, 1fr); }
+}
+
+.panel-foot {
+  max-width: 1180px;
+  margin: clamp(34px, 5vw, 64px) auto 0;
+  font-family: var(--serif);
+  font-size: clamp(13px, 1.1vw, 15px);
+  letter-spacing: .06em;
+  color: rgba(243, 237, 227, .34);
+  text-align: center;
+}
+
+.panel-note {
+  max-width: 1180px;
+  margin: clamp(12px, 2vw, 22px) auto 0;
+  font-family: var(--serif);
+  font-size: clamp(15px, 1.4vw, 19px);
+  line-height: 2;
+  letter-spacing: .04em;
+  color: rgba(243, 237, 227, .72);
+}
+
+/* ── 十二颗摘完：在一起多少天 ─────────────── */
+.finale {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 14px;
+  padding: 24px;
+  text-align: center;
+  background:
+    radial-gradient(70% 50% at 50% 42%, rgba(255, 233, 196, .10), transparent 72%),
+    rgba(4, 6, 13, .55);
+  backdrop-filter: blur(1.5px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 1.1s ease;
+}
+.finale.in { opacity: 1; pointer-events: auto; }
+
+/* 兜底：带 hidden 的元素一律不显示。
+   .finale 设了 display: grid，会盖掉 hidden 属性，结果是一层看不见却挡住点击的
+   全屏层——这就是“点星星没反应”的真正原因。 */
+[hidden] { display: none !important; }
+.finale-kicker {
+  margin: 0;
+  font-family: var(--sans);
+  font-size: 12px;
+  letter-spacing: .42em;
+  text-indent: .42em;
+  color: rgba(255, 233, 196, .6);
+}
+.finale-days {
+  margin: 6px 0 0;
+  font-family: var(--serif);
+  font-size: clamp(64px, 15vw, 168px);
+  line-height: 1;
+  letter-spacing: .04em;
+  color: #fff6e6;
+  text-shadow: 0 0 60px rgba(255, 220, 170, .35);
+  font-variant-numeric: tabular-nums;
+}
+.finale-days i {
+  font-style: normal;
+  margin-left: .12em;
+  font-size: .22em;
+  letter-spacing: .2em;
+  color: rgba(255, 233, 196, .7);
+  vertical-align: .9em;
+}
+.finale-line {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: clamp(14px, 1.3vw, 17px);
+  letter-spacing: .08em;
+  color: rgba(243, 237, 227, .6);
+}
+.finale-again {
+  margin-top: 22px;
+  padding: 10px 20px;
+  border: 1px solid rgba(243, 237, 227, .24);
+  background: transparent;
+  color: rgba(243, 237, 227, .72);
+  font-family: var(--sans);
+  font-size: 12px;
+  letter-spacing: .18em;
+  cursor: pointer;
+  transition: color .3s, border-color .3s;
+}
+.finale-again:hover { color: var(--star); border-color: rgba(255, 233, 196, .5); }
+
+/* 大图 */
+.viewer {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  max-width: 94vw;
+  max-height: 92vh;
+  overflow: visible;
+}
+.viewer::backdrop { background: rgba(3, 5, 10, .93); backdrop-filter: blur(6px); }
+.viewer img {
+  display: block;
+  max-width: 94vw;
+  max-height: 80vh;
+  margin: 0 auto;
+  filter: brightness(.98);
+}
+.viewer figcaption, .viewer p {
+  margin: 14px 0 0;
+  text-align: center;
+  font-family: var(--sans);
+  font-size: 12.5px;
+  letter-spacing: .12em;
+  color: rgba(243, 237, 227, .5);
+}
+.viewer-hint {
+  margin: 6px 0 0;
+  font-size: 11px;
+  letter-spacing: .14em;
+  color: rgba(243, 237, 227, .34);
+}
+/* 关闭按钮固定在视口右上角：原来用 absolute 挂在对话框上方 -42px，
+   手机上会跑到屏幕外面，点不到——这就是「看完回不去」的原因 */
+.viewer-close {
+  position: fixed;
+  top: max(12px, env(safe-area-inset-top));
+  right: max(12px, env(safe-area-inset-right));
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  padding: 0 0 2px;
+  border: 1px solid rgba(243, 237, 227, .22);
+  border-radius: 50%;
+  background: rgba(12, 16, 26, .62);
+  backdrop-filter: blur(8px);
+  color: rgba(243, 237, 227, .86);
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 3;
+}
+.viewer-close:hover { border-color: rgba(243, 237, 227, .5); color: #fff; }
+.viewer-close:focus-visible { outline: 1px solid rgba(255, 233, 196, .7); outline-offset: 3px; }
+
+@media (max-width: 900px) {
+  .wall { columns: 2; }
+}
+@media (max-width: 560px) {
+  .panel { padding: 22px 16px calc(56px + env(safe-area-inset-bottom)); }
+  .panel-tools { position: static; margin-top: 20px; }
+  .panel-close { padding: 8px 13px; }
+  .panel-add { padding: 8px 12px; }
+  .panel-head { margin-bottom: 22px; }
+  .wall { column-gap: 8px; }
+  .wall figure { margin-bottom: 8px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel { transition: opacity .3s linear; transform: none; }
+  .flash.on { animation: none; opacity: .35; }
+  .star-hit { transition: none; }
+}
+
+/* 给读屏用的隐藏文字 */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Netlify 免费版会在右下角注入一个徽标 iframe，这里藏掉 */
+#nl-badge-frame, iframe[src*="netlify"] { display: none !important; }
+
+/* 空墙说明句与相框之间留一点呼吸 */
+#pnNote { margin: 0 0 16px; }

@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>摘星星 · 我们</title>
+<link rel="stylesheet" href="sky.css">
+</head>
+<body>
+
+<div class="sky-stage" id="stage">
+  <canvas id="sky" aria-hidden="true"></canvas>
+  <p class="sky-to" id="skyTo">给　陈慧虹</p>
+  <p class="sky-tip" id="skyTip">天上每一颗都能摘。先摘一颗。</p>
+  <p class="sky-count" id="skyCount" aria-live="polite">0 / 3</p>
+</div>
+
+<!-- 摘下来的那一颗 -->
+<section class="panel" id="panel" hidden aria-labelledby="pnTitle">
+  <header class="panel-head">
+    <p class="panel-kicker" id="pnKicker">第 01 颗星</p>
+    <h1 class="panel-title" id="pnTitle">她</h1>
+    <p class="panel-sub" id="pnSub"></p>
+    <div class="panel-tools">
+      <button class="panel-add" id="panelAdd" type="button" hidden>＋ 加照片</button>
+      <button class="panel-close" id="panelClose" type="button" aria-label="回到星空">回到星空</button>
+    </div>
+  </header>
+
+  <p class="panel-status" id="panelStatus" hidden aria-live="polite"></p>
+  <form class="pass" id="passGate" hidden>
+    <label for="passInput">口令</label>
+    <input id="passInput" type="password" inputmode="numeric" autocomplete="off" placeholder="只有你们知道的那串">
+    <button id="passOk" type="submit">确定</button>
+  </form>
+  <input class="panel-file" id="panelFile" type="file" accept="image/*" multiple hidden>
+
+  <div class="wall" id="wall"></div>
+  <p class="panel-note" id="pnNote" hidden>这颗星还没装内容。</p>
+
+  <p class="panel-foot">摘下的星会留在原地，暗下去，还能点回去。</p>
+</section>
+
+<dialog id="viewer" class="viewer" aria-label="照片">
+  <button class="viewer-close" id="viewerClose" type="button" aria-label="关闭大图，回到照片墙">×</button>
+  <img id="viewerImg" alt="">
+  <p id="viewerCap"></p>
+  <p class="viewer-hint">点空白处，或右上角 × 回到照片墙</p>
+</dialog>
+
+<!-- 都摘完之后 -->
+<section class="finale" id="finale" hidden aria-live="polite">
+  <p class="finale-kicker">星星都摘完了</p>
+  <p class="finale-days"><span id="finaleNum">0</span><i>天</i></p>
+  <p class="finale-line" id="finaleLine"></p>
+  <button class="finale-again" id="finaleAgain" type="button">再看一次星空</button>
+</section>
+
+<div class="flash" id="flash" aria-hidden="true"></div>
+
+<script src="config.js"></script>
+<script src="sky.js"></script>
+</body>
+</html>
