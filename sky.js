@@ -532,7 +532,11 @@
       headers: { ...sbHeaders(), 'Content-Type': 'image/jpeg' },
       body: blob
     });
-    if (!res.ok) throw new Error(`upload ${res.status}`);
+    if (!res.ok) {
+      let detail = ''
+      try { detail = (await res.text()).slice(0, 160) } catch {}
+      throw new Error(`upload ${res.status} ${detail}`)
+    };
     return publicUrl(wallKey, name);
   };
 
@@ -626,11 +630,18 @@
         const src = await uploadBlob(wallKey, blob, done);
         wall.insertBefore(makeFigure({ src, caption: '', fresh: true }), wall.firstChild);
         done += 1;
-      } catch {
-        setStatus('有一张没传上去，再试一次？', 4000);
-        panelAdd.disabled = false;
-        panelFile.value = '';
-        return;
+      } catch (err) {
+        const why = String(err && err.message ? err.message : err)
+        const hint = /Bucket not found/i.test(why)
+          ? '云端相册（Supabase 的 wall 桶）还没建，先找阿泽修一下。'
+          : /401|403|row-level|policy/i.test(why)
+            ? '没有上传权限，桶的读写策略要重设一下。'
+            : '有一张没传上去，再试一次？'
+        setStatus(hint, 6000)
+        console.error('[upload]', why)
+        panelAdd.disabled = false
+        panelFile.value = ''
+        return
       }
     }
     setStatus(`传上去 ${done} 张，下次我上线就整理。`, 7000);
