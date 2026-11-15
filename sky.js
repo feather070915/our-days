@@ -499,6 +499,20 @@
   };
   const publicUrl = (wallKey, name) => `${SB.url}/storage/v1/object/public/${SB.bucket}/${wallKey}/${name}`;
 
+  // 云端文件名的本地副本映射：GitHub Pages 是 CDN，比直连 Supabase 快一个数量级
+  const localCopies = (() => {
+    const map = new Map();
+    const bag = window.SITE_UPLOADS || {};
+    for (const wall of Object.keys(bag)) {
+      for (const item of bag[wall] || []) {
+        if (!item || !item.src) continue;
+        const name = String(item.src).split('/').pop();
+        if (name) map.set(wall + '/' + name, item.src);
+      }
+    }
+    return map;
+  })();
+
   // 已经传上去的（还没配文的）都算「待整理」，排在墙最前面
   const listUploads = async (wallKey) => {
     if (!SB || !wallKey) return [];
@@ -514,7 +528,7 @@
       return rows
         .filter((r) => r.metadata && /^image\//.test(r.metadata.mimetype || ''))
         .filter((r) => !skip.includes(r.name))
-        .map((r) => ({ src: publicUrl(wallKey, r.name), caption: '', fresh: true }));
+        .map((r) => ({ src: localCopies.get(`${wallKey}/${r.name}`) || publicUrl(wallKey, r.name), caption: '', fresh: true }));
     } catch {
       return [];
     }
