@@ -690,6 +690,10 @@ if (skip.length) {
     pnTitle.textContent = part.title || '这颗星';
     pnSub.textContent = part.sub || '';
     wall.innerHTML = '';
+    // 跳名单兜底：渲染前再过滤一次（测试图/已整理过的都别上墙）
+    if (Array.isArray(part.photos) && skip.length) {
+      part.photos = part.photos.filter((x) => !skip.includes(String((x && x.src) || '').split('/').pop()));
+    }
     const hasPhotos = Array.isArray(part.photos) && part.photos.length > 0;
     pnNote.textContent = part.empty || '这颗星还没装内容。';
     pnNote.hidden = hasPhotos;
