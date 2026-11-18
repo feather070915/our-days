@@ -8,7 +8,7 @@ window.SITE = {
     bucket: 'wall',
     pass: '09121599',
     // 已经整理进网站的（或者不想要的）文件名放这里，页面上就不再显示
-    skip: ['selftest-1794382634560.jpg','selftest-photo-1794382792276.jpg','food-test-1794391678543.jpg','uptest-1794749565871.jpg','browser-test-1794750110000.jpg','1793519297755-0-0ugk2.jpg', '1793519533078-0-9owyw.jpg', '1793522326213-0-o0jpw.jpg',
+    skip: ['1794749616172-0-m2ua8.jpg','selftest-1794382634560.jpg','selftest-photo-1794382792276.jpg','food-test-1794391678543.jpg','uptest-1794749565871.jpg','browser-test-1794750110000.jpg','1793519297755-0-0ugk2.jpg', '1793519533078-0-9owyw.jpg', '1793522326213-0-o0jpw.jpg',
       'selftest-1794382634560.jpg', 'selftest-photo-1794382792276.jpg', 'food-test-1794391678543.jpg']
   },
   // 她怎么称呼你 / 你怎么称呼她

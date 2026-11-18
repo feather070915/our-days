@@ -525,6 +525,14 @@
       if (!res.ok) return [];
       const rows = await res.json();
       const skip = Array.isArray(SB.skip) ? SB.skip : [];
+// 跳名单也要作用在云端本地副本上，否则测试图会从 uploads.js 里再冒出来
+if (skip.length) {
+  for (const p of PARTS) {
+    if (Array.isArray(p.photos)) {
+      p.photos = p.photos.filter((x) => !skip.includes(String((x && x.src) || '').split('/').pop()));
+    }
+  }
+}
       return rows
         .filter((r) => r.metadata && /^image\//.test(r.metadata.mimetype || ''))
         .filter((r) => !skip.includes(r.name))
