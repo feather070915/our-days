@@ -497,6 +497,8 @@
     if (json) h['Content-Type'] = 'application/json';
     return h;
   };
+  // 不显示的测试图/历史文件名（模块级，openPanel 渲染前也要用）
+  const SKIP = (SB && Array.isArray(SB.skip)) ? SB.skip : [];
   const publicUrl = (wallKey, name) => `${SB.url}/storage/v1/object/public/${SB.bucket}/${wallKey}/${name}`;
 
   // 云端文件名的本地副本映射：GitHub Pages 是 CDN，比直连 Supabase 快一个数量级
@@ -524,7 +526,7 @@
       });
       if (!res.ok) return [];
       const rows = await res.json();
-      const skip = Array.isArray(SB.skip) ? SB.skip : [];
+      const skip = SKIP;
 // 跳名单也要作用在云端本地副本上，否则测试图会从 uploads.js 里再冒出来
 if (skip.length) {
   for (const p of PARTS) {
@@ -691,8 +693,8 @@ if (skip.length) {
     pnSub.textContent = part.sub || '';
     wall.innerHTML = '';
     // 跳名单兜底：渲染前再过滤一次（测试图/已整理过的都别上墙）
-    if (Array.isArray(part.photos) && skip.length) {
-      part.photos = part.photos.filter((x) => !skip.includes(String((x && x.src) || '').split('/').pop()));
+    if (Array.isArray(part.photos) && SKIP.length) {
+      part.photos = part.photos.filter((x) => !SKIP.includes(String((x && x.src) || '').split('/').pop()));
     }
     const hasPhotos = Array.isArray(part.photos) && part.photos.length > 0;
     pnNote.textContent = part.empty || '这颗星还没装内容。';
